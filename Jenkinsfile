@@ -22,14 +22,17 @@ pipeline {
                         # Create a directory for Terraform binaries
                         mkdir -p ${TERRAFORM_DIR}
                         
-                        # Download Terraform
-                        curl -o terraform.zip https://releases.hashicorp.com/terraform/1.0.0/terraform_1.0.0_linux_amd64.zip
-                        
-                        # Unzip Terraform
-                        unzip terraform.zip -d ${TERRAFORM_DIR}
+                        # Download Terraform if not already present
+                        if [ ! -f "${TERRAFORM_DIR}/terraform" ]; then
+                            curl -o terraform.zip https://releases.hashicorp.com/terraform/1.0.0/terraform_1.0.0_linux_amd64.zip
+                            unzip terraform.zip -d ${TERRAFORM_DIR}
+                        fi
                         
                         # Add Terraform to the PATH
                         export PATH=${TERRAFORM_DIR}:$PATH
+                        
+                        # Verify Terraform installation
+                        terraform --version
                         
                         # Initialize Terraform
                         terraform init
@@ -44,6 +47,10 @@ pipeline {
                     sh '''
                         export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        
+                        # Verify Terraform is in PATH
+                        terraform --version
+                        
                         terraform apply -auto-approve
                     '''
                 }
