@@ -3,6 +3,7 @@ provider "aws" {
 }
 
 terraform {
+
   backend "local" {
     path = "/var/jenkins_home/terraform_state/terraform.tfstate"
   }
@@ -21,5 +22,7 @@ module "s3_bucket" {
 }
 
 module "alb" {
-  source = "./modules/alb"
+  source  = "./modules/alb"
+  vpc_id  = var.vpc_id
+  subnets = ["subnet-0123456789abcdef0", "subnet-abcdef0123456789"]  # Example Subnet IDs
 }

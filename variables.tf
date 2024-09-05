@@ -17,3 +17,14 @@ variable "s3_bucket_name" {
   description = "S3 bucket name"
   default     = "my-unique-s3-bucket"
 }
+
+
+variable "vpc_id" {
+  description = "The VPC ID for the ALB"
+  type        = string
+}
+
+variable "subnets" {
+  description = "List of subnets for the ALB"
+  type        = list(string)
+}
