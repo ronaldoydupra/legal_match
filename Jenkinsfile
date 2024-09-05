@@ -2,10 +2,7 @@ pipeline {
     agent any
 
     environment {
-        TF_VERSION = '1.4.0'
-        // TF_STATE_BUCKET = 'my-terraform-state-bucket'
-        // TF_STATE_KEY = 'terraform/state.tfstate'
-        // TF_STATE_REGION = 'us-west-2'
+        TF_VERSION = '1.9.5'
     }
 
     stages {
@@ -44,7 +41,7 @@ pipeline {
                         sh '''
                         export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        /var/jenkins_home/bin/terraform init
+                        /var/jenkins_home/bin/terraform init -reconfigure
                         '''
                     }
                 }
