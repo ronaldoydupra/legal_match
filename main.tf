@@ -3,7 +3,6 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "1.9.5"
   backend "local" {
     path = "/var/jenkins_home/terraform_state/terraform.tfstate"
   }
