@@ -24,7 +24,7 @@ pipeline {
                         
                         # Download Terraform if not already present
                         if [ ! -f "${TERRAFORM_DIR}/terraform" ]; then
-                            curl -o terraform.zip https://releases.hashicorp.com/terraform/1.9.5/https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_arm64.zip
+                            curl -o terraform.zip https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_arm64.zip
                             unzip terraform.zip -d ${TERRAFORM_DIR}
                         fi
                         
