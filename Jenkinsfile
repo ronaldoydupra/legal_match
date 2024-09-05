@@ -1,13 +1,15 @@
 pipeline {
     agent any
+
     environment {
         GIT_REPO = 'https://github.com/ronaldoydupra/legal-match.git'
         AWS_REGION = 'ap-southeast-1'
-        TERRAFORM_DIR = "${env.WORKSPACE}/terraform"
     }
+
     parameters {
         booleanParam(name: 'CLEANUP', defaultValue: false, description: 'Clean up resources after deployment')
     }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -19,23 +21,10 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Create a directory for Terraform binaries
-                        mkdir -p ${TERRAFORM_DIR}
-                        
-                        # Download Terraform if not already present
-                        if [ ! -f "${TERRAFORM_DIR}/terraform" ]; then
-                            curl -o terraform.zip https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_arm64.zip
-                            unzip terraform.zip -d ${TERRAFORM_DIR}
-                        fi
-                        
-                        # Add Terraform to the PATH
-                        export PATH=${TERRAFORM_DIR}:$PATH
-                        
-                        # Verify Terraform installation
-                        terraform --version
-                        
-                        # Initialize Terraform
-                        terraform init
+                    terraform --version || curl -o terraform.zip https://releases.hashicorp.com/terraform/1.0.0/terraform_1.0.0_linux_amd64.zip
+                    unzip terraform.zip
+                    mv terraform /usr/local/bin/
+                    terraform init
                     '''
                 }
             }
@@ -43,15 +32,11 @@ pipeline {
 
         stage('Terraform Apply') {
             steps {
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([string(credentialsId: 'AWS_ACCESS_KEY', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'AWS_SECRET_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
-                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        
-                        # Verify Terraform is in PATH
-                        terraform --version
-                        
-                        terraform apply -auto-approve
+                    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                    terraform apply -auto-approve
                     '''
                 }
             }
@@ -78,6 +63,7 @@ pipeline {
             }
         }
     }
+
     post {
         always {
             cleanWs()
