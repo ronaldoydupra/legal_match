@@ -3,8 +3,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/ronaldoydupra/legal-match.git'
         AWS_REGION = 'ap-southeast-1'
-        TERRAFORM_HOME = tool name: 'terraform-11', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
-        PATH = "${TERRAFORM_HOME}/bin:${env.PATH}"
+        TERRAFORM_DIR = "${env.WORKSPACE}/terraform"
     }
     parameters {
         booleanParam(name: 'CLEANUP', defaultValue: false, description: 'Clean up resources after deployment')
@@ -21,16 +20,16 @@ pipeline {
                 script {
                     sh '''
                         # Create a directory for Terraform binaries
-                        mkdir -p ${TERRAFORM_HOME}
+                        mkdir -p ${TERRAFORM_DIR}
                         
                         # Download Terraform if not already present
-                        if [ ! -f "${TERRAFORM_HOME}/terraform" ]; then
+                        if [ ! -f "${TERRAFORM_DIR}/terraform" ]; then
                             curl -o terraform.zip https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_arm64.zip
-                            unzip terraform.zip -d ${TERRAFORM_HOME}
+                            unzip terraform.zip -d ${TERRAFORM_DIR}
                         fi
                         
                         # Add Terraform to the PATH
-                        export PATH=${TERRAFORM_HOME}:$PATH
+                        export PATH=${TERRAFORM_DIR}:$PATH
                         
                         # Verify Terraform installation
                         terraform --version
