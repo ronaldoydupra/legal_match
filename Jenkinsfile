@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'hashicorp/terraform:1.4.0'
-            args '-v /var/jenkins_home:/var/jenkins_home'
-        }
-    }
+    agent any
 
     environment {
         TF_STATE_BUCKET = 'lg-terraform-state-bucket'
@@ -19,30 +14,43 @@ pipeline {
             }
         }
 
-        stage('Terraform Init') {
+        stage('Run Terraform in Docker') {
             steps {
-                sh '''
-                terraform init \
-                    -backend-config="bucket=${TF_STATE_BUCKET}" \
-                    -backend-config="key=${TF_STATE_KEY}" \
-                    -backend-config="region=${TF_STATE_REGION}"
-                '''
-            }
-        }
-
-        stage('Terraform Plan') {
-            steps {
-                sh 'terraform plan -out=tfplan'
-            }
-        }
-
-        stage('Terraform Apply') {
-            steps {
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                script {
+                    // Run the hashicorp/terraform Docker image to execute Terraform commands
                     sh '''
-                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        
+                    docker run --rm \
+                        -v $(pwd):/workspace \
+                        -w /workspace \
+                        -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+                        -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+                        hashicorp/terraform:1.4.0 \
+                        terraform init -backend-config="bucket=${TF_STATE_BUCKET}" \
+                                       -backend-config="key=${TF_STATE_KEY}" \
+                                       -backend-config="region=${TF_STATE_REGION}"
+
+                    docker run --rm \
+                        -v $(pwd):/workspace \
+                        -w /workspace \
+                        -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+                        -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+                        hashicorp/terraform:1.4.0 \
+                        terraform plan -out=tfplan
+                    '''
+                }
+            }
+        }
+
+        stage('Apply Terraform') {
+            steps {
+                script {
+                    sh '''
+                    docker run --rm \
+                        -v $(pwd):/workspace \
+                        -w /workspace \
+                        -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+                        -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+                        hashicorp/terraform:1.4.0 \
                         terraform apply -auto-approve tfplan
                     '''
                 }
