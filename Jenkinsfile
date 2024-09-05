@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         TF_VERSION = '1.9.5'
+        LOCAL_TFSTATE_PATH = '/var/jenkins_home/terraform-state'
     }
 
     stages {
@@ -41,7 +42,7 @@ pipeline {
                         sh '''
                         export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        /var/jenkins_home/bin/terraform init -reconfigure
+                        /var/jenkins_home/bin/terraform init -backend-config="path=${LOCAL_TFSTATE_PATH}/terraform.tfstate" -reconfigure
                         '''
                     }
                 }
@@ -51,7 +52,6 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 script {
-                    sh '/var/jenkins_home/bin/terraform init'
                     sh '/var/jenkins_home/bin/terraform plan -out=tfplan'
                 }
             }
