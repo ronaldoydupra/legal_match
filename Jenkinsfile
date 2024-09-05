@@ -51,6 +51,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 script {
+                    sh '/var/jenkins_home/bin/terraform init'
                     sh '/var/jenkins_home/bin/terraform plan -out=tfplan'
                 }
             }
