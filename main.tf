@@ -10,7 +10,7 @@ module "ec2_instance" {
 
 module "s3_bucket" {
   source = "./modules/s3"
-  bucket_name = var.s3_bucket_name
+  bucket = var.s3_bucket_name
 }
 
 module "alb" {

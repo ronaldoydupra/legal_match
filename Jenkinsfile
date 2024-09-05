@@ -1,61 +1,95 @@
 pipeline {
     agent any
+
     environment {
-        GIT_REPO = 'https://github.com/ronaldoydupra/legal-match.git'
-        AWS_REGION = 'ap-southeast-1'
-        TERRAFORM_DIR = "${env.WORKSPACE}/terraform"
+        TF_VERSION = '1.4.0'
+        TF_STATE_BUCKET = 'lg-terraform-state-bucket'
+        TF_STATE_KEY = 'terraform/state.tfstate'
+        TF_STATE_REGION = 'ap-southeast-1'
     }
-    parameters {
-        booleanParam(name: 'CLEANUP', defaultValue: false, description: 'Clean up resources after deployment')
-    }
+
     stages {
-        stage('Clone Repository') {
+        stage('Setup Terraform') {
             steps {
-                git branch: 'main', url: "${env.GIT_REPO}"
-            }
-        }
-
-
-        stage('Terraform Apply') {
-            steps {
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                script {
                     sh '''
-                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        
-                        # Verify Terraform is in PATH
-                        terraform --version
-                        
-                        terraform apply -auto-approve
+                    # Check if Terraform is already installed
+                    if ! command -v /var/jenkins_home/bin/terraform >/dev/null 2>&1; then
+                        echo "Terraform not found, installing..."
+                        curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+                        unzip terraform_${TF_VERSION}_linux_amd64.zip
+                        mv terraform terraform_${TF_VERSION}
+                        mkdir -p /var/jenkins_home/bin
+                        mv terraform_${TF_VERSION} /var/jenkins_home/bin/terraform
+                        chmod +x /var/jenkins_home/bin/terraform
+                    else
+                        echo "Terraform already installed."
+                    fi
+                    /var/jenkins_home/bin/terraform --version
                     '''
                 }
             }
         }
 
-        stage('Error Handling') {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Terraform Init') {
             steps {
                 script {
-                    try {
-                        sh 'terraform apply -auto-approve'
-                    } catch (Exception e) {
-                        error 'Terraform apply failed!'
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh '''
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        /var/jenkins_home/bin/terraform init \
+                            -backend-config="bucket=${TF_STATE_BUCKET}" \
+                            -backend-config="key=${TF_STATE_KEY}" \
+                            -backend-config="region=${TF_STATE_REGION}"
+                        '''
                     }
                 }
             }
         }
 
-        stage('Cleanup') {
-            when {
-                expression { return params.CLEANUP }
-            }
+        stage('Terraform Plan') {
             steps {
-                sh 'terraform destroy -auto-approve'
+                script {
+                    sh '/var/jenkins_home/bin/terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                script {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh '''
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        /var/jenkins_home/bin/terraform apply -auto-approve tfplan
+                        '''
+                    }
+                }
             }
         }
     }
+
     post {
         always {
+            archiveArtifacts artifacts: '**/*.tfstate*', allowEmptyArchive: true
+            junit '**/test-results/*.xml'
             cleanWs()
+        }
+
+        success {
+            echo 'Terraform deployment was successful!'
+        }
+
+        failure {
+            echo 'Terraform deployment failed.'
         }
     }
 }

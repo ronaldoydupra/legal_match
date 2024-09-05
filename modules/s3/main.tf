@@ -1,7 +1,8 @@
-resource "aws_s3_bucket" "bucket" {
-  bucket = var.bucket_name
+variable "bucket" {
+  description = "The name of the S3 bucket"
+  type        = string
 }
 
-output "bucket_name" {
-  value = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket" "this" {
+  bucket = var.bucket
 }
