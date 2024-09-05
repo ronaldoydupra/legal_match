@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         TF_VERSION = '1.4.0'
-        TF_STATE_BUCKET = 'lg-terraform-state-bucket'
+        TF_STATE_BUCKET = 'my-terraform-state-bucket'
         TF_STATE_KEY = 'terraform/state.tfstate'
-        TF_STATE_REGION = 'ap-southeast-1'
+        TF_STATE_REGION = 'us-west-2'
     }
 
     stages {
