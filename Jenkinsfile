@@ -3,6 +3,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/ronaldoydupra/legal-match.git'
         AWS_REGION = 'ap-southeast-1'
+        TERRAFORM_DIR = "${env.WORKSPACE}/terraform"
     }
     parameters {
         booleanParam(name: 'CLEANUP', defaultValue: false, description: 'Clean up resources after deployment')
@@ -18,9 +19,19 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        terraform --version || curl -o terraform.zip https://releases.hashicorp.com/terraform/1.0.0/terraform_1.0.0_linux_amd64.zip
-                        unzip terraform.zip
-                        mv terraform /usr/local/bin/
+                        # Create a directory for Terraform binaries
+                        mkdir -p ${TERRAFORM_DIR}
+                        
+                        # Download Terraform
+                        curl -o terraform.zip https://releases.hashicorp.com/terraform/1.0.0/terraform_1.0.0_linux_amd64.zip
+                        
+                        # Unzip Terraform
+                        unzip terraform.zip -d ${TERRAFORM_DIR}
+                        
+                        # Add Terraform to the PATH
+                        export PATH=${TERRAFORM_DIR}:$PATH
+                        
+                        # Initialize Terraform
                         terraform init
                     '''
                 }
