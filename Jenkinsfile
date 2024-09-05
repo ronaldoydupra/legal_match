@@ -44,10 +44,7 @@ pipeline {
                         sh '''
                         export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        /var/jenkins_home/bin/terraform init \
-                            -backend-config="bucket=${TF_STATE_BUCKET}" \
-                            -backend-config="key=${TF_STATE_KEY}" \
-                            -backend-config="region=${TF_STATE_REGION}"
+                        /var/jenkins_home/bin/terraform init
                         '''
                     }
                 }
