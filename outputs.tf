@@ -1,12 +1,11 @@
 output "instance_id" {
-  value = aws_instance.this.id
+  value = module.ec2_instance.instance_id
 }
 
 
 output "bucket_name" {
-  value = aws_s3_bucket.this.bucket
+  value = module.s3_bucket.bucket_name
 }
-
 
 output "alb_dns" {
   value = module.alb.alb_dns
