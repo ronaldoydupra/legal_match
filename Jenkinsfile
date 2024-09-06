@@ -90,7 +90,6 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '**/*.tfstate*', allowEmptyArchive: true
-            cleanWs()
         }
 
         success {
