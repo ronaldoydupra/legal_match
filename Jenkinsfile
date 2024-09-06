@@ -4,7 +4,10 @@ pipeline {
     environment {
         TF_VERSION = '1.9.5'  // Define your Terraform version here
         LOCAL_TFSTATE_PATH = '/var/jenkins_home/terraform-state'
-        CLEANUP_ENABLED = true  // Set this to false if you want to skip cleanup
+    }
+
+    parameters {
+        booleanParam(name: 'CLEANUP', defaultValue: false, description: 'Clean up resources after deployment')
     }
 
     stages {
@@ -65,25 +68,29 @@ pipeline {
                 }
             }
         }
+
+        stage('Cleanup') {
+            when {
+                expression { return params.CLEANUP }
+            }
+            steps {
+                echo 'Cleaning up Terraform-managed infrastructure...'
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                sh '''
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        /var/jenkins_home/bin/terraform destroy -auto-approve
+                '''
+            }
+        }
+    }
+
     }
 
     post {
         always {
-            script {
-                // Cleanup stage based on the flag
-                if (env.CLEANUP_ENABLED.toBoolean()) {
-                    echo 'Cleaning up Terraform-managed infrastructure...'
-                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        sh '''
-                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        /var/jenkins_home/bin/terraform destroy -auto-approve
-                        '''
-                    }
-                } else {
-                    echo 'Cleanup step is disabled.'
-                }
-            }
+            archiveArtifacts artifacts: '**/*.tfstate*', allowEmptyArchive: true
+            cleanWs()
         }
 
         success {
