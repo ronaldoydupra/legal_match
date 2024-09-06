@@ -100,9 +100,5 @@ pipeline {
             echo 'Terraform deployment failed.'
             // Optional: Add notification or additional error handling here
         }
-
-        cleanup {
-            cleanWs()  // Clean workspace
-        }
     }
 }
