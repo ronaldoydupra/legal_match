@@ -28,6 +28,8 @@ module "vpc" {
 
 module "alb" {
   source  = "./modules/alb"
-  vpc_id  = var.vpc_id
-  subnets = module.vpc.subnets
+  vpc_id  = module.vpc.vpc_id     # Use the output of the VPC module for vpc_id
+  subnets = module.vpc.subnets    # Use the output of the VPC module for subnets
 }
+
+
