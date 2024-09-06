@@ -10,7 +10,7 @@ variable "instance_type" {
 
 variable "ami" {
   description = "AMI for EC2"
-  default     = "ami-0c55b159cbfafe1f0"  # Ubuntu AMI
+  default     = "ami-070f589e4b4a3fece"  # Ubuntu Server 22.04 LTS (64-bit Arm)
 }
 
 variable "s3_bucket_name" {
