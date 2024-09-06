@@ -3,14 +3,8 @@ resource "aws_lb" "alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = var.subnets  # This is correct
+  subnets            = var.subnets
 }
-
-
-output "alb_dns" {
-  value = aws_lb.alb.dns_name
-}
-
 
 resource "aws_security_group" "alb_sg" {
   name        = "alb-sg"
@@ -32,4 +26,6 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-
+output "alb_dns" {
+  value = aws_lb.alb.dns_name
+}

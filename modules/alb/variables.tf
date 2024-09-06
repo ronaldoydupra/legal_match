@@ -7,4 +7,3 @@ variable "subnets" {
   description = "List of subnet IDs for the ALB"
   type        = list(string)
 }
-

@@ -21,8 +21,13 @@ module "s3_bucket" {
   s3_bucket_name = var.s3_bucket_name
 }
 
+module "vpc" {
+  source = "./modules/vpc"
+}
+
+
 module "alb" {
   source  = "./modules/alb"
   vpc_id  = var.vpc_id
-  subnets = ["subnet-0123456789abcdef0", "subnet-abcdef0123456789"]  # Example Subnet IDs
+  subnets = module.vpc.subnets
 }
