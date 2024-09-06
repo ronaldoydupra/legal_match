@@ -52,6 +52,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 script {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '/var/jenkins_home/bin/terraform plan -out=tfplan'
                 }
             }
