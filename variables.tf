@@ -5,15 +5,17 @@ variable "aws_region" {
 
 variable "instance_type" {
   description = "EC2 instance type"
-  default     = "t3.micro"
+  default     = "t2.micro"
 }
 
 variable "ami" {
   description = "AMI for EC2"
-  default     = "ami-0f0a689dea27d9dc8"  # Ubuntu Server 22.04 LTS (64-bit Arm)
+  default     = "ami-01811d4912b4ccb26"  # Ubuntu Server 22.04 LTS (64-bit Arm) ami-01811d4912b4ccb26 - t2.micro
 }
 
 variable "s3_bucket_name" {
   description = "S3 bucket name"
   default     = "lgm-2024-s3-bucket"
 }
+
+ 
