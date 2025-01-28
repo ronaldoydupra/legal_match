@@ -4,7 +4,6 @@ pipeline {
     environment {
         TF_VERSION = '1.9.5'  // Define your Terraform version here
         LOCAL_TFSTATE_PATH = '/var/jenkins_home/terraform-state'
-        TF_BINARY_PATH = '/var/jenkins_home/bin/terraform'
     }
 
     parameters {
@@ -25,21 +24,17 @@ pipeline {
                 script {
                     sh '''
                     # Check if Terraform is already installed
-                    if ! command -v ${TF_BINARY_PATH} >/dev/null 2>&1; then
+                    if ! command -v /var/jenkins_home/bin/terraform >/dev/null 2>&1; then
                         echo "Terraform not found, installing..."
-                        curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip || exit 1
-                        echo "Downloaded Terraform zip successfully."
-                        
-                        # Verify and extract
-                        unzip -o terraform_${TF_VERSION}_linux_amd64.zip || exit 1
+                        curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+                        unzip terraform_${TF_VERSION}_linux_amd64.zip
                         mkdir -p /var/jenkins_home/bin
-                        mv terraform ${TF_BINARY_PATH}
-                        chmod +x ${TF_BINARY_PATH}
-                        rm -f terraform_${TF_VERSION}_linux_amd64.zip
+                        mv terraform terraform_${TF_VERSION}
+                        chmod +x /var/jenkins_home/bin/terraform
                     else
                         echo "Terraform already installed."
                     fi
-                    ${TF_BINARY_PATH} --version
+                    /var/jenkins_home/bin/terraform --version
                     '''
                 }
             }
@@ -53,7 +48,7 @@ pipeline {
                         mkdir -p ${LOCAL_TFSTATE_PATH}
                         export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        ${TF_BINARY_PATH} init -backend-config="path=${LOCAL_TFSTATE_PATH}/terraform.tfstate" -reconfigure
+                        /var/jenkins_home/bin/terraform init -backend-config="path=${LOCAL_TFSTATE_PATH}/terraform.tfstate" -reconfigure
                         '''
                     }
                 }
@@ -67,7 +62,7 @@ pipeline {
                         sh '''
                         export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        ${TF_BINARY_PATH} apply -auto-approve
+                        /var/jenkins_home/bin/terraform apply -auto-approve
                         '''
                     }
                 }
@@ -81,14 +76,15 @@ pipeline {
             steps {
                 echo 'Cleaning up Terraform-managed infrastructure...'
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh '''
+                sh '''
                         export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        ${TF_BINARY_PATH} destroy -auto-approve
-                    '''
-                }
+                        /var/jenkins_home/bin/terraform destroy -auto-approve
+                '''
             }
         }
+    }
+
     }
 
     post {
