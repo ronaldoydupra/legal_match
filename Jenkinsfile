@@ -51,8 +51,8 @@ pipeline {
                     withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh '''
                         mkdir -p ${LOCAL_TFSTATE_PATH}
-                        export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                         ${TF_BINARY_PATH} init -backend-config="path=${LOCAL_TFSTATE_PATH}/terraform.tfstate" -reconfigure
                         '''
                     }
@@ -65,8 +65,8 @@ pipeline {
                 script {
                     withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh '''
-                        export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                         ${TF_BINARY_PATH} apply -auto-approve
                         '''
                     }
@@ -82,8 +82,8 @@ pipeline {
                 echo 'Cleaning up Terraform-managed infrastructure...'
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
-                        export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                         ${TF_BINARY_PATH} destroy -auto-approve
                     '''
                 }
