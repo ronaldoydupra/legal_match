@@ -1,6 +1,7 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   default     = "us-east-2"
+  endpoint = "https://s3.us-west-2.amazonaws.com"
 }
 
 variable "instance_type" {
