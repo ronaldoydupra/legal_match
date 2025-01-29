@@ -71,16 +71,25 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    withCredentials([aws(
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        credentialsId: 'aws-key-secret',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {
                         sh '''
-                        export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
-                        ${TF_BINARY_PATH} apply -auto-approve
+                        #!/bin/bash
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        
+                        /var/jenkins_home/bin/terraform apply -auto-approve \
+                            -var "access_key=${AWS_ACCESS_KEY_ID}" \
+                            -var "secret_key=${AWS_SECRET_ACCESS_KEY}"
                         '''
                     }
                 }
             }
         }
+
 
         stage('Cleanup') {
             when {
