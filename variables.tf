@@ -16,7 +16,6 @@ variable "ami" {
 variable "s3_bucket_name" {
   description = "S3 bucket name"
   default     = "lm-test-2025-s3-bucket"
-  region = "us-west-2"  # Ensure this matches the region of the bucket
 }
 
  variable "access_key" {
