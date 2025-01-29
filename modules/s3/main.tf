@@ -5,4 +5,9 @@ variable "s3_bucket_name" {
 
 resource "aws_s3_bucket" "this" {
   bucket = var.s3_bucket_name
+  acl    = "private"
+
+  tags = {
+    Name = var.s3_bucket_name
+  }
 }
