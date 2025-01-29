@@ -80,12 +80,15 @@ pipeline {
                         # Refresh Terraform state to ensure it matches the actual infrastructure
                         export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        /var/jenkins_home/bin/terraform refresh
+                        /var/jenkins_home/bin/terraform refresh \
+                            -var "access_key=${AWS_ACCESS_KEY_ID}" \
+                            -var "secret_key=${AWS_SECRET_ACCESS_KEY}"
                         '''
                     }
                 }
             }
         }
+
 
         stage('Terraform Apply') {
             steps {
