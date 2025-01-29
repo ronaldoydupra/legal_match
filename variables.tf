@@ -18,4 +18,14 @@ variable "s3_bucket_name" {
   default     = "lgm-2024-s3-bucket"
 }
 
- 
+ variable "access_key" {
+  description = "AWS access key"
+  type        = string
+  sensitive   = true
+}
+
+variable "secret_key" {
+  description = "AWS secret key"
+  type        = string
+  sensitive   = true
+}
