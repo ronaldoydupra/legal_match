@@ -67,6 +67,25 @@ pipeline {
             }
         }
 
+        stage('Terraform Refresh') {
+            steps {
+                script {
+                    withCredentials([aws(
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        credentialsId: 'aws-key-secret',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {
+                        sh '''
+                        #!/bin/bash
+                        # Refresh Terraform state to ensure it matches the actual infrastructure
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        /var/jenkins_home/bin/terraform refresh
+                        '''
+                    }
+                }
+            }
+        }
 
         stage('Terraform Apply') {
             steps {
@@ -89,7 +108,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Cleanup') {
             when {
