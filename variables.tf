@@ -1,7 +1,6 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   default     = "us-east-2"
-  endpoint = "https://s3.us-west-2.amazonaws.com"
 }
 
 variable "instance_type" {
@@ -17,6 +16,7 @@ variable "ami" {
 variable "s3_bucket_name" {
   description = "S3 bucket name"
   default     = "lm-test-2025-s3-bucket"
+  region = "us-west-2"  # Ensure this matches the region of the bucket
 }
 
  variable "access_key" {
