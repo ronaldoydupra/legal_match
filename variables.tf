@@ -15,7 +15,7 @@ variable "ami" {
 
 variable "s3_bucket_name" {
   description = "S3 bucket name"
-  default     = "lgm-2024-s3-bucket"
+  default     = "lm-test-2025-s3-bucket"
 }
 
  variable "access_key" {
