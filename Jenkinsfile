@@ -4,6 +4,7 @@ pipeline {
     environment {
         TF_VERSION = '1.9.5'  // Define your Terraform version here
         LOCAL_TFSTATE_PATH = '/var/jenkins_home/terraform-state'
+        TF_BINARY_PATH = '/var/jenkins_home/bin/terraform'
     }
 
     parameters {
@@ -24,17 +25,21 @@ pipeline {
                 script {
                     sh '''
                     # Check if Terraform is already installed
-                    if ! command -v /var/jenkins_home/bin/terraform >/dev/null 2>&1; then
+                    if ! command -v ${TF_BINARY_PATH} >/dev/null 2>&1; then
                         echo "Terraform not found, installing..."
-                        curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-                        unzip terraform_${TF_VERSION}_linux_amd64.zip
+                        curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip || exit 1
+                        echo "Downloaded Terraform zip successfully."
+                        
+                        # Verify and extract
+                        unzip -o terraform_${TF_VERSION}_linux_amd64.zip || exit 1
                         mkdir -p /var/jenkins_home/bin
-                        mv terraform terraform_${TF_VERSION}
-                        chmod +x /var/jenkins_home/bin/terraform
+                        mv terraform ${TF_BINARY_PATH}
+                        chmod +x ${TF_BINARY_PATH}
+                        rm -f terraform_${TF_VERSION}_linux_amd64.zip
                     else
                         echo "Terraform already installed."
                     fi
-                    /var/jenkins_home/bin/terraform --version
+                    ${TF_BINARY_PATH} --version
                     '''
                 }
             }
@@ -46,9 +51,9 @@ pipeline {
                     withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh '''
                         mkdir -p ${LOCAL_TFSTATE_PATH}
-                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        /var/jenkins_home/bin/terraform init -backend-config="path=${LOCAL_TFSTATE_PATH}/terraform.tfstate" -reconfigure
+                        export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                        ${TF_BINARY_PATH} init -backend-config="path=${LOCAL_TFSTATE_PATH}/terraform.tfstate" -reconfigure
                         '''
                     }
                 }
@@ -60,9 +65,9 @@ pipeline {
                 script {
                     withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh '''
-                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        /var/jenkins_home/bin/terraform apply -auto-approve
+                        export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                        ${TF_BINARY_PATH} apply -auto-approve
                         '''
                     }
                 }
@@ -76,15 +81,14 @@ pipeline {
             steps {
                 echo 'Cleaning up Terraform-managed infrastructure...'
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                sh '''
-                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        /var/jenkins_home/bin/terraform destroy -auto-approve
-                '''
+                    sh '''
+                        export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                        ${TF_BINARY_PATH} destroy -auto-approve
+                    '''
+                }
             }
         }
-    }
-
     }
 
     post {
