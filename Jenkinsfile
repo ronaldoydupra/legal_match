@@ -99,6 +99,7 @@ pipeline {
                 echo 'Cleaning up Terraform-managed infrastructure...'
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
+                    #!/bin/bash
                         export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
                         export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
                         ${TF_BINARY_PATH} destroy -auto-approve
