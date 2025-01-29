@@ -2,6 +2,7 @@ provider "aws" {
   access_key = var.access_key
   secret_key = var.secret_key
   region = var.aws_region
+  endpoint = "https://s3.us-west-2.amazonaws.com"
 }
 
 
