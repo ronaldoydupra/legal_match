@@ -48,17 +48,25 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-key-secret', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    withCredentials([aws(
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        credentialsId: 'aws-key-secret',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {
                         sh '''
+                        #!/bin/bash
                         mkdir -p ${LOCAL_TFSTATE_PATH}
-                        export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
-                        ${TF_BINARY_PATH} init -backend-config="path=${LOCAL_TFSTATE_PATH}/terraform.tfstate" -reconfigure
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        /var/jenkins_home/bin/terraform init \
+                            -backend-config="path=${LOCAL_TFSTATE_PATH}/terraform.tfstate" \
+                            -reconfigure
                         '''
                     }
                 }
             }
         }
+
 
         stage('Terraform Apply') {
             steps {
